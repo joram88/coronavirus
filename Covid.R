@@ -4,6 +4,7 @@ library(modlr)
 library(downloader)
 library(lubridate)
 library(scales)
+library(ggthemes)
 
 url <- "https://data.humdata.org/hxlproxy/data/download/time_series-ncov-Confirmed.csv?dest=data_edit&filter01=explode&explode-header-att01=date&explode-value-att01=value&filter02=rename&rename-oldtag02=%23affected%2Bdate&rename-newtag02=%23date&rename-header02=Date&filter03=rename&rename-oldtag03=%23affected%2Bvalue&rename-newtag03=%23affected%2Binfected%2Bvalue%2Bnum&rename-header03=Value&filter04=clean&clean-date-tags04=%23date&filter05=sort&sort-tags05=%23date&sort-reverse05=on&filter06=sort&sort-tags06=%23country%2Bname%2C%23adm1%2Bname&tagger-match-all=on&tagger-default-tag=%23affected%2Blabel&tagger-01-header=province%2Fstate&tagger-01-tag=%23adm1%2Bname&tagger-02-header=country%2Fregion&tagger-02-tag=%23country%2Bname&tagger-03-header=lat&tagger-03-tag=%23geo%2Blat&tagger-04-header=long&tagger-04-tag=%23geo%2Blon&header-row=1&url=https%3A%2F%2Fraw.githubusercontent.com%2FCSSEGISandData%2FCOVID-19%2Fmaster%2Fcsse_covid_19_data%2Fcsse_covid_19_time_series%2Ftime_series_19-covid-Confirmed.csv"
 download(url, dest="time_series-ncov-Confirmed.csv", mode="wb")
@@ -90,19 +91,27 @@ time <- time[c(TRUE, FALSE)]
 
 final_df<- data.frame(fit1,fit2,fit3,fit4,fit5, days =time)
 
+
+
 final_df$date <- ymd("2020-01-22")+ final_df$days
+final_df$fit3 <- NULL
+
+final_df2 <- final_df %>% 
+        gather(key = type, value = value, -date, -days) %>% 
+        mutate(group = ifelse(type=="fit1", "China Actual",
+                      ifelse(type=="fit2", "China Forecast",
+                             ifelse(type=="fit4", "US Actual",
+                                    "US Forecast"))))
 
 
-ggplot(final_df, aes(x = date))+
-        geom_line( aes(x = date, y = fit1, color = "red", size = 5))+ #china actual
-        geom_line( aes(x = date, y = fit2))+ #China forecast
-        geom_line (aes(x = date, y = fit4, color = "green", size=5))+ #US actual
-        geom_line (aes(x = date, y = fit5, color = "cyan", size=4.5))+ #US forecast
-        labs(title="Coronavirus Model - USA vs China", x = "Date")+
+ggplot()+
+        geom_line(data = final_df2[final_df2$type=="fit1",], aes(x = date, y = value, color = group), size = 5)+
+        geom_line(data = final_df2[final_df2$type=="fit2",], aes(x = date, y = value, color = group), size = 2)+
+        geom_line(data = final_df2[final_df2$type=="fit4",], aes(x = date, y = value, color = group), size = 5)+
+        geom_line(data = final_df2[final_df2$type=="fit5",], aes(x = date, y = value, color = group), size = 2)+
+        labs(title="Coronavirus Model - USA vs China", x = "Date", caption = "Source: Humanitarian Data Exchange",
+             subtitle = "By JRP (2020/03/20)")+
         theme_economist()+
-        theme(legend.position="NA")+
-        scale_y_continuous(name="Confirmed Cases", labels = comma)
-
-
-
+        scale_y_continuous(name="Confirmed Cases", labels = comma)+
+        theme(legend.title=element_blank())
 
