@@ -190,7 +190,7 @@ covid_ctry %>%
         labs(title = "Smoothed Rate of Change in Cases")
 
 covid_ctry %>%
-                filter(country %in% c("China", "Italy", "US", "Mexico", "Spain", "United Kingdom")) %>% 
+                filter(country %in% c("China", "Italy", "US", "Mexico", "Spain", "United Kingdom", "Korea, South")) %>% 
                 ggplot(aes(x = Date, y = lValue, group_by(country), color = country))+
                 geom_line(size =1.5)+
         scale_y_continuous(name="Logarithmic Confirmed Cases by Country", labels=comma)+
