@@ -1,6 +1,4 @@
-library(readxl)
 library(tidyverse)
-library(downloader)
 library(lubridate)
 library(scales)
 library(ggthemes)
