@@ -183,7 +183,7 @@ covid_ctry <- covid_ctry %>%
 
 covid_ctry %>%
         filter(country %in% c("China", "Italy", "US", "Mexico", "Spain", "United Kingdom")) %>% 
-        filter(rate<1) %>% 
+        filter(rate<.4) %>% 
         ggplot(aes(x = Date, y = rate, group_by(country), color = country))+
         stat_smooth(se=FALSE, method = "loess", size = 1.5)+
         scale_y_continuous(name="Percent Change in cases (smoothed)", labels=percent)+
@@ -217,6 +217,7 @@ covid_ctry %>%
         labs(title = "Growth Rate in Number of Confirmed Cases",
              subtitle = "As of 2020/03/21")
 
+#Using 10 day moving average now instead of just rate
 
 ttd <- covid_ctry %>% 
         group_by(country) %>% 
@@ -285,14 +286,13 @@ three_week_forecast %>%
         scale_y_continuous(name="Number of cases", labels=comma)
 
 
-covid_death %>% 
-        filter(country %in% c("China", "US", "Mexico", "Spain", "Italy", "United Kingdom")) %>% 
-        filter(Date==last(Date)) %>% 
-        arrange(desc(Value)) %>% 
+us_dead <- covid_death %>% 
+        filter(country %in% c("US"))
 
-ggplot(aes(x = country, y = Value, fill = country))+
-        geom_bar(stat = "identity")+
-        labs(title = "Deaths by Country")
+ggplot(data = us_dead, aes(x = Date, y = Value))+
+        geom_line()+
+        geom_point()+
+        labs(title = "Deaths in the US")
 
 covid_ctry %>% 
         filter(Date>"2020-03-01", country =="US") %>% 
@@ -301,5 +301,22 @@ covid_ctry %>%
         geom_line()+
         geom_smooth()+
         labs(title = "Rate of Change in log(Value) for USA")
-        
+covid_ctry %>% 
+        filter(Date>"2020-03-01", country =="Italy") %>% 
+        mutate(slope = (lValue - lag(lValue))/lag(lValue)) %>% 
+        ggplot(aes(x = Date, y=slope))+
+        geom_line()+
+        geom_smooth()+
+        labs(title = "Rate of Change in log(Value) for Italy")
+
+covid_ctry %>% 
+        filter(Date>"2020-03-01", country =="Korea, South") %>% 
+        mutate(slope = (lValue - lag(lValue))/lag(lValue)) %>% 
+        ggplot(aes(x = Date, y=slope))+
+        geom_line()+
+        geom_smooth()+
+        labs(title = "Rate of Change in log(Value) for South Korea")
+
+#Next graph: New cases per week (Y axis) ~ Total confirmed cases (X axis)
+
 
