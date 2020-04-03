@@ -315,6 +315,3 @@ covid_ctry %>%
         geom_smooth()+
         labs(title = "Rate of Change in log(Value) for South Korea")
 
-#Next graph: New cases per week (Y axis) ~ Total confirmed cases (X axis)
-
-
