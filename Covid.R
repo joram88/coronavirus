@@ -190,14 +190,6 @@ covid_ctry <- covid_ctry %>%
 #Covid Maps
 
 covid_ctry %>%
-        filter(country %in% c("China", "Italy", "US", "Mexico", "Spain", "Japan", "Iran", "Sweden", "Korea, South")) %>% 
-        filter(rate<.4) %>% 
-        ggplot(aes(x = Date, y = rate, group_by(country), color = country))+
-        stat_smooth(se=FALSE, method = "loess", size = 1.5)+
-        scale_y_continuous(name="Percent Change in cases (smoothed)", labels=percent)+
-        labs(title = "Smoothed Rate of Change in Cases")
-
-covid_ctry %>%
                 filter(country %in% c("China", "Italy", "US", "Mexico", "Spain", "Japan", "Iran", "Sweden", "Korea, South")) %>% 
                 ggplot(aes(x = Date, y = lValue, group_by(country), color = country))+
                 geom_line(size =1.5)+
@@ -212,20 +204,6 @@ covid_ctry %>%
         scale_y_continuous(name = "Confirmed Cases", labels=comma)+
         labs(title = "Total Confirmed Cases")
 
-
-#Rate graph
-
-covid_ctry %>%
-        filter(rate<Inf & Date > "2020-03-01") %>% 
-        filter(country %in% c("United Kingdom", "US", "Italy", "China", "Mexico")) %>% 
-        ggplot(aes(x = Date, y = rate, group_by(country), color = country))+
-        geom_point(size=3)+
-        geom_line(size=1.1)+
-        scale_y_continuous(name="Growth rate", labels = percent)+
-        labs(title = "Growth Rate in Number of Confirmed Cases",
-             subtitle = "As of 2020/03/21")
-
-#Using 10 day moving average now instead of just rate
 
 ttd <- covid_ctry %>% 
         group_by(country) %>% 
@@ -305,37 +283,12 @@ ggplot(data = us_dead, aes(x = Date, y = Value))+
         geom_line()+
         geom_point()+
         labs(title = "Deaths in the US")
-
-covid_ctry %>% 
-        filter(Date>"2020-03-01", country =="US") %>% 
-        mutate(slope = (lValue - lag(lValue))/lag(lValue)) %>% 
-        ggplot(aes(x = Date, y=slope))+
-        geom_line()+
-        geom_smooth()+
-        labs(title = "Rate of Change in log(Value) for USA")
-
-covid_ctry %>% 
-        filter(Date>"2020-03-01", country =="Italy") %>% 
-        mutate(slope = (lValue - lag(lValue))/lag(lValue)) %>% 
-        ggplot(aes(x = Date, y=slope))+
-        geom_line()+
-        geom_smooth()+
-        labs(title = "Rate of Change in log(Value) for Italy")
-
-covid_ctry %>% 
-        filter(Date>"2020-03-01", country =="Korea, South") %>% 
-        mutate(slope = (lValue - lag(lValue))/lag(lValue)) %>% 
-        ggplot(aes(x = Date, y=slope))+
-        geom_line()+
-        geom_smooth()+
-        labs(title = "Rate of Change in log(Value) for South Korea")
-
 #Next graphs: 
 
 #New cases per week (Y axis) ~ Total confirmed cases (X axis)
 
 weekly <- covid %>% 
-        filter(country %in% c("US", "Mexico", "Korea, South")) %>% 
+        filter(country %in% c("US", "Mexico", "Korea, South", "Sweden", "China", "Italy")) %>% 
         group_by(country, Week) %>% 
         summarize(new_cases = sum(new_cases))
 
@@ -350,12 +303,15 @@ drop <- drop %>%
 
 drop %>% 
         filter(log(Max)>3) %>% 
-ggplot(aes(x = log(Max), y = log(new_cases.y), group = country, color = country))+
-        geom_point()+
-        labs(title = "First signs of a slow down in new cases the US")+
-        xlab("New Cases by Week (log)")+
-        ylab("Cumulative Confirmed Cases (log)")+
-        geom_smooth()
+ggplot(aes(y = new_cases.y, x = (Value/1000), group = country, color = country))+
+        labs(title = "New Cases by Country")+
+        scale_y_continuous(name="New Cases by Week", labels=comma)+
+        xlab("Confirmed Cases (Thousands)")+
+        geom_smooth(se = FALSE)+
+        scale_color_brewer(palette="Dark2")+
+        facet_wrap(~country, scales = "free")+
+        theme(legend.position = "none")
+        
 
 covid %>% 
         filter(country %in% c("China", "Italy", "US", "Mexico", "Spain", "Japan", "Iran", "Sweden", "Korea, South")) %>% 
