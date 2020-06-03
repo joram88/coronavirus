@@ -174,8 +174,18 @@ MEX <- covid %>%
         group_by(Date,country) %>% 
         summarize(Value=sum(Value))
 
+RUS <- covid %>% 
+        filter(country=="Russia") %>% 
+        group_by(Date,country) %>% 
+        summarize(Value=sum(Value))
+
+BRA <- covid %>% 
+        filter(country=="Brazil") %>% 
+        group_by(Date,country) %>% 
+        summarize(Value=sum(Value))
+
 covid_ctry <- rbind(CHN, ITA, USA, IRA, SKA, SPA, GER, FRA, SWI, CRU,
-                    UK, NED, JAP, NOR, SWE, BEL, AUS, DEN, MAL, SNG, MEX)
+                    UK, NED, JAP, NOR, SWE, BEL, AUS, DEN, MAL, SNG, MEX, RUS, BRA)
 
 #Create log of value and moving average for rate
 
@@ -190,7 +200,7 @@ covid_ctry <- covid_ctry %>%
 #Covid Maps
 
 covid_ctry %>%
-                filter(country %in% c("China", "Italy", "US", "Mexico", "Spain", "Japan", "Iran", "Sweden", "Korea, South")) %>% 
+                filter(country %in% c("China", "Italy", "US", "Mexico", "Spain", "Japan", "Iran", "Sweden", "Korea, South", "Russia", "Brazil")) %>% 
                 ggplot(aes(x = Date, y = lValue, group_by(country), color = country))+
                 geom_line(size =1.5)+
         scale_y_continuous(name="Logarithmic Confirmed Cases by Country", labels=comma)+
@@ -198,7 +208,16 @@ covid_ctry %>%
 
 
 covid_ctry %>%
-        filter(country %in% c("China", "Italy", "US", "Mexico", "Spain", "Japan", "Iran", "Sweden", "Korea, South")) %>% 
+        filter(country %in% c("China", "Italy", "US", "Mexico", "Spain", "Japan", "Iran", "Sweden", "Korea, South", "Russia", "Brazil")) %>%
+        filter(Date > "2020-03-01") %>% 
+        ggplot(aes(x = Date, y = Value, group_by(country), color = country))+
+        geom_line(size = 1.5)+
+        scale_y_continuous(name = "Confirmed Cases", labels=comma)+
+        labs(title = "Total Confirmed Cases")
+
+covid_ctry %>%
+        filter(country %in% c("China", "Italy", "Mexico", "Spain", "Japan", "Iran", "Sweden", "Korea, South", "Russia", "Brazil")) %>%
+        filter(Date > "2020-03-01") %>% 
         ggplot(aes(x = Date, y = Value, group_by(country), color = country))+
         geom_line(size = 1.5)+
         scale_y_continuous(name = "Confirmed Cases", labels=comma)+
@@ -275,6 +294,9 @@ three_week_forecast %>%
 us_dead <- covid_death %>% 
         filter(country %in% c("US"))
 
+MEX_dead <- covid_death %>% 
+        filter(country %in% c("Mexico"))
+
 
 MEX_dead <- covid_death %>% 
         filter(country %in% c("Mexico"))
@@ -282,8 +304,7 @@ MEX_dead <- covid_death %>%
 ggplot(data = us_dead, aes(x = Date, y = Value))+
         geom_line()+
         geom_point()+
-        labs(title = "Deaths in the US")
-#Next graphs: 
+        labs(title = "Deaths in the US")#Next graphs: 
 
 #New cases per week (Y axis) ~ Total confirmed cases (X axis)
 
@@ -321,16 +342,9 @@ covid %>%
         ylab("New Daily Cases")
 
 covid %>% 
-        filter(country %in% c("China", "Italy", "US", "Mexico", "Spain", "Japan", "Iran", "Sweden", "Korea, South")) %>% 
-        ggplot(aes(x = Date,y = new_cases, color = country))+
-        geom_line()+
-        labs(title = "New daily cases")+
-        ylab("New Daily Cases")
-
-covid %>% 
         filter(country == "US", Date > "2020-03-15") %>% 
         ggplot(aes(x = Date,y = new_cases))+
-        geom_bar(stat="identity")+
+        geom_bar(stat="identity", color = "blue")+
         labs(title = "New daily cases in the US")+
         ylab("New Daily Cases")+
         geom_smooth(se = FALSE)
@@ -340,7 +354,25 @@ covid %>%
         filter(Date > "2020-03-15") %>%
         #filter(new_deaths < 2900) %>%  #Removes the two outliers due to NY adjustments
         ggplot(aes(x = Date,y = new_deaths))+
-        geom_bar(stat="identity")+
+        geom_bar(stat="identity", color = "blue")+
         labs(title = "New daily deaths in the US")+
         ylab("New Daily Deaths")+
         geom_smooth(se = FALSE)
+
+covid %>% 
+         filter(country == "Mexico", Date > "2020-03-15") %>% 
+         ggplot(aes(x = Date,y = new_cases))+
+         geom_bar(stat="identity", color = "green")+
+         labs(title = "New daily cases in Mexico")+
+         ylab("New Daily Cases")+
+         geom_smooth(se = FALSE)
+ 
+ 
+MEX_dead %>% 
+         filter(Date > "2020-03-15") %>%
+         #filter(new_deaths < 2900) %>%  #Removes the two outliers due to NY adjustments
+         ggplot(aes(x = Date,y = new_deaths))+
+         geom_bar(stat="identity", color = "green")+
+         labs(title = "New daily deaths in Mexico")+
+         ylab("New Daily Deaths")+
+         geom_smooth(se = FALSE)
