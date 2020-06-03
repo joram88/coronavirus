@@ -14,7 +14,7 @@ pacf(covid_USA_ts)
 
 (AR <- arima(covid_USA_ts, order =c(2,1,1)))
 (AR2 <- arima(covid_USA_ts, order =c(2,1,0)))
-(AR3 <- arima(covid_USA_ts, order = c(1,2,1))) #Picks a 0,1,0 as best model on Apr 8
+(AR3 <- arima(covid_USA_ts, order = c(2,2,2))) #Input best model according to auto.arima
 auto.arima(covid_USA_ts)
 
 #2,1,1 seems likely
@@ -81,7 +81,7 @@ ggplot()+
 
 
 ggplot()+
-        labs(title = "US Deaths Forecast (30 days) based on Confirmed Cases", caption = "Assuming a 5.5% of confirmed case mortality rate")+
+        labs(title = "US Deaths Forecast (30 days) based on Confirmed Cases", caption = "Assuming a 6% of confirmed case mortality rate")+
         geom_line(data = us_dead_short, aes(x = Date, y = Value))+
         geom_line(data = model1, aes(x = Date, y = dead, color = "red"))+
         geom_line(data = model2, aes(x = Date, y = dead, color = "green"))+
