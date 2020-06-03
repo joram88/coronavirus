@@ -1,0 +1,87 @@
+#Covid Models
+#Run after Covid 2.R
+
+library(forecast)
+
+
+covid_MEX_ts <- covid_ctry %>% 
+        filter(country=="Mexico", Value > 0)
+
+covid_MEX_ts <- as.ts(covid_MEX_ts[5])
+
+acf(covid_MEX_ts)
+pacf(covid_MEX_ts)
+
+(AR <- arima(covid_MEX_ts, order =c(2,1,1)))
+(AR2 <- arima(covid_MEX_ts, order =c(1,2,1)))
+(AR3 <- auto.arima(covid_MEX_ts)) #Insert best model here chosen by auto.arima
+auto.arima(covid_MEX_ts)
+
+#2,1,1 seems likely
+#2,1,0 seems very optimistic
+#1,2,1 seems worst case
+
+
+residuals <- AR$residuals
+residuals2 <- AR2$residuals
+residuals3 <- AR3$residuals
+
+forecast <- predict(AR, n.ahead=30)
+forecast2 <- predict(AR2,n.ahead=30)
+forecast3 <- predict(AR3,n.ahead=30)
+
+ts.plot(forecast$pred, covid_MEX_ts, forecast2$pred, forecast3$pred,
+        col=c("blue","black","green","red"))
+
+#Simple Death forecast model
+
+MEX_dead_ts <- as.ts(MEX_dead[3])
+
+MEX_dead_short <- MEX_dead %>% 
+        filter(Date>"2020-03-15")
+
+(AR_dead <- auto.arima(MEX_dead_ts))
+
+#Convert back to real numbers to determine cases exp(forecast)
+
+model1 <- data.frame(Value=as.numeric(exp(forecast$pred)), check.names = FALSE)
+model2 <- data.frame(Value=as.numeric(exp(forecast2$pred)), check.names = FALSE)
+model3 <- data.frame(Value=as.numeric(exp(forecast3$pred)), check.names = FALSE)
+
+#Assuming 4% mortality (increased from 2% as of April 10 2020)
+
+model1$days <- 1:30
+model1$Date <- last(MEX$Date)+model1$days
+model1$dead <- model1$Value * .11
+
+model2$days <- 1:30
+model2$Date <- last(MEX$Date)+model2$days
+model2$dead <- model2$Value * .11
+
+model3$days <- 1:30
+model3$Date <- last(MEX$Date)+model3$days
+model3$dead <- model3$Value * .11
+
+MEX_short <- MEX %>% 
+        filter(Date>"2020-03-15")
+
+ggplot()+
+        labs(title = "Mexico Confirmed Cases Forecast (30 days)")+
+        geom_line(data = MEX_short, aes(x = Date, y = Value))+
+        geom_line(data = model1, aes(x = Date, y = Value, color = "red"))+ #2,1,1
+        geom_line(data = model2, aes(x = Date, y = Value, color = "green"))+ #2,1,0
+        geom_line(data = model3, aes(x = Date, y = Value, color = "blue"))+ #1,1,1
+        scale_y_continuous(name = "Confirmed Cases", labels = comma, 
+                           sec.axis = dup_axis(breaks = c(max(model1$Value), max(model2$Value), max(model3$Value))))+
+        theme(legend.position = "none")
+
+
+ggplot()+
+        labs(title = "Mexico Deaths Forecast (30 days) based on Confirmed Cases", caption = "Assuming a 5.5% of confirmed case mortality rate")+
+        geom_line(data = MEX_dead_short, aes(x = Date, y = Value))+
+        geom_line(data = model1, aes(x = Date, y = dead, color = "red"))+
+        geom_line(data = model2, aes(x = Date, y = dead, color = "green"))+
+        geom_line(data = model3, aes(x = Date, y = dead, color = "blue"))+
+        scale_y_continuous(name = "Deaths", labels = comma,
+                           sec.axis = dup_axis(breaks = c(max(model1$dead), max(model2$dead), max(model3$dead))))+
+        theme(legend.position = "none")
