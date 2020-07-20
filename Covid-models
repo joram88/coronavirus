@@ -3,19 +3,18 @@
 
 library(forecast)
 
+USA <- covid %>% 
+        filter(country == "US") %>% 
+        arrange(Week)
 
-covid_USA_ts <- covid_ctry %>% 
-        filter(country=="US")
-
-covid_USA_ts <- as.ts(covid_USA_ts[5])
+covid_USA_ts <- as.ts(USA[3])
 
 acf(covid_USA_ts)
 pacf(covid_USA_ts)
 
-(AR <- arima(covid_USA_ts, order =c(2,1,1)))
-(AR2 <- arima(covid_USA_ts, order =c(2,1,0)))
-(AR3 <- arima(covid_USA_ts, order = c(2,2,2))) #Input best model according to auto.arima
-auto.arima(covid_USA_ts)
+(AR <- arima(covid_USA_ts, order =c(1,2,1)))
+(AR2 <- arima(covid_USA_ts, order =c(1,2,2)))
+(AR3 <- auto.arima(covid_USA_ts)) #Input best model according to auto.arima
 
 #2,1,1 seems likely
 #2,1,0 seems very optimistic
@@ -48,23 +47,23 @@ forecast_dead <- predict(AR_dead, n.ahead=30)
 
 #Convert back to real numbers to determine cases exp(forecast)
 
-model1 <- data.frame(Value=as.numeric(exp(forecast$pred)), check.names = FALSE)
-model2 <- data.frame(Value=as.numeric(exp(forecast2$pred)), check.names = FALSE)
-model3 <- data.frame(Value=as.numeric(exp(forecast3$pred)), check.names = FALSE)
+model1 <- data.frame(Value=as.numeric(forecast$pred, check.names = FALSE))
+model2 <- data.frame(Value=as.numeric(forecast2$pred), check.names = FALSE)
+model3 <- data.frame(Value=as.numeric(forecast3$pred), check.names = FALSE)
 
 #Assuming 4% mortality (increased from 2% as of April 10 2020)
 
 model1$days <- 1:30
 model1$Date <- last(USA$Date)+model1$days
-model1$dead <- model1$Value * .059
+model1$dead <- model1$Value * .045
 
 model2$days <- 1:30
 model2$Date <- last(USA$Date)+model2$days
-model2$dead <- model2$Value * .059
+model2$dead <- model2$Value * .045
 
 model3$days <- 1:30
 model3$Date <- last(USA$Date)+model3$days
-model3$dead <- model3$Value * .059
+model3$dead <- model3$Value * .045
 
 USA_short <- USA %>% 
         filter(Date>"2020-03-15")
@@ -74,14 +73,14 @@ ggplot()+
         geom_line(data = USA_short, aes(x = Date, y = Value))+
         geom_line(data = model1, aes(x = Date, y = Value, color = "red"))+ #2,1,1
         geom_line(data = model2, aes(x = Date, y = Value, color = "green"))+ #2,1,0
-        geom_line(data = model3, aes(x = Date, y = Value, color = "blue"))+ #1,1,1
+        geom_line(data = model3, aes(x = Date, y = Value, color = "blue"))+ #Auto Arima
         scale_y_continuous(name = "Confirmed Cases", labels = comma, 
                            sec.axis = dup_axis(breaks = c(max(model1$Value), max(model2$Value), max(model3$Value))))+
         theme(legend.position = "none")
 
 
 ggplot()+
-        labs(title = "US Deaths Forecast (30 days) based on Confirmed Cases", caption = "Assuming a 6% of confirmed case mortality rate")+
+        labs(title = "US Deaths Forecast (30 days) based on hypothetical moortality rate", caption = "Assuming a 6% of confirmed case mortality rate")+
         geom_line(data = us_dead_short, aes(x = Date, y = Value))+
         geom_line(data = model1, aes(x = Date, y = dead, color = "red"))+
         geom_line(data = model2, aes(x = Date, y = dead, color = "green"))+
